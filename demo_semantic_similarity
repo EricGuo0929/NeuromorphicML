@@ -1,0 +1,104 @@
+import time
+import numpy as np
+import torch
+from sklearn.metrics.pairwise import cosine_similarity
+
+# === IMPORT YOUR MODULES ===
+from spikecoder import SpikeEncoder
+from popspike import PopulationSpikeEncoder
+
+# ==========================
+# CONFIG
+# ==========================
+SIM_THRESHOLD = 0.75
+TIME_STEPS = 50
+
+SENTENCE_PAIRS = [
+    ("The cat is sleeping on the mat", "A feline is resting on a rug"),
+    ("The stock price collapsed", "The market experienced a sudden crash"),
+    ("I like pizza", "The car needs fuel"),
+]
+
+# ==========================
+# LLM BASELINE (Embedding Similarity)
+# ==========================
+def llm_similarity(emb1, emb2):
+    return cosine_similarity(
+        emb1.reshape(1, -1),
+        emb2.reshape(1, -1)
+    )[0][0]
+
+# ==========================
+# NEUROMORPHIC SIMILARITY
+# ==========================
+def spike_similarity(spikes_a, spikes_b):
+    """
+    Compare two spike trains by average firing rate similarity
+    """
+    rate_a = spikes_a.mean(axis=1)
+    rate_b = spikes_b.mean(axis=1)
+
+    return cosine_similarity(
+        rate_a.reshape(1, -1),
+        rate_b.reshape(1, -1)
+    )[0][0]
+
+# ==========================
+# MAIN DEMO
+# ==========================
+def main():
+    print("\n🧠 Neuromorphic AI vs LLM Demo")
+    print("=" * 40)
+
+    # --- Initialize encoders ---
+    print("Initializing encoders...")
+    spike_encoder = SpikeEncoder()
+    pop_encoder = PopulationSpikeEncoder(
+        neurons_per_dim=20,
+        time_steps=TIME_STEPS
+    )
+
+    for s1, s2 in SENTENCE_PAIRS:
+        print("\n----------------------------------")
+        print(f"Sentence A: {s1}")
+        print(f"Sentence B: {s2}")
+
+        # ===== LLM BASELINE =====
+        t0 = time.time()
+        emb1 = spike_encoder.embed_text(s1)
+        emb2 = spike_encoder.embed_text(s2)
+        llm_sim = llm_similarity(emb1, emb2)
+        llm_time = time.time() - t0
+
+        # ===== NEUROMORPHIC PIPELINE =====
+        t1 = time.time()
+
+        spikes1, spike_count1 = pop_encoder.encode(emb1)
+        spikes2, spike_count2 = pop_encoder.encode(emb2)
+
+        spike_sim = spike_similarity(spikes1, spikes2)
+        spike_time = time.time() - t1
+
+        # ===== RESULTS =====
+        print("\n📊 Results")
+        print(f"LLM Similarity:        {llm_sim:.3f}")
+        print(f"Neuromorphic Similarity: {spike_sim:.3f}")
+
+        print("\n⚡ Activity / Energy Proxy")
+        print(f"LLM latency:           {llm_time*1000:.1f} ms")
+        print(f"Neuromorphic latency:  {spike_time*1000:.1f} ms")
+
+        print(f"Total spikes fired:    {spike_count1 + spike_count2}")
+        print(f"Avg spikes per step:   {(spike_count1 + spike_count2)/TIME_STEPS:.1f}")
+
+        # ===== DECISION =====
+        print("\n🧠 Decision")
+        if spike_sim > SIM_THRESHOLD:M  
+            print("→ Neuromorphic model: SAME meaning")
+        else:
+            print("→ Neuromorphic model: DIFFERENT meaning")
+
+    print("\n✅ Demo complete.")
+
+if __name__ == "__main__":
+    main()
