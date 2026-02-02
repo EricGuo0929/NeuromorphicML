@@ -93,7 +93,7 @@ def main():
 
         # ===== DECISION =====
         print("\n🧠 Decision")
-        if spike_sim > SIM_THRESHOLD:M  
+        if spike_sim > SIM_THRESHOLD:
             print("→ Neuromorphic model: SAME meaning")
         else:
             print("→ Neuromorphic model: DIFFERENT meaning")

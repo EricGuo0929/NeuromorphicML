@@ -19,6 +19,15 @@ class SpikeEncoder:
         self.num_neurons_per_dim = num_neurons_per_dim
         self.max_rate = max_rate
 
+    def embed_text(self, text):
+        """Extract embeddings without generating spikes (for similarity comparison)"""
+        inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True).to(device)
+        with torch.no_grad():
+            input_embeddings = self.model.embeddings(input_ids=inputs['input_ids'])
+        embeddings = input_embeddings.squeeze(0)  # Remove batch dimension
+        # Return mean pooling of embeddings for sentence-level representation
+        return embeddings.mean(dim=0).cpu().numpy()
+
     def encode(self, text, time_steps=100):
         # Tokenize and get input embeddings
         inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True).to(device)
